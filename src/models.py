@@ -23,9 +23,9 @@ class BaseModel(nn.Module):
             print('Loading %s generator...' % self.name)
 
             if torch.cuda.is_available():
-                data = torch.load(self.gen_weights_path)
+                data = torch.load(self.gen_weights_path, weights_only=True)
             else:
-                data = torch.load(self.gen_weights_path, map_location=lambda storage, loc: storage)
+                data = torch.load(self.gen_weights_path, map_location=lambda storage, loc: storage, weights_only=True)
 
             self.generator.load_state_dict(data['generator'])
             self.iteration = data['iteration']
@@ -36,9 +36,9 @@ class BaseModel(nn.Module):
             print('Loading %s discriminator...' % self.name)
 
             if torch.cuda.is_available():
-                data = torch.load(self.dis_weights_path)
+                data = torch.load(self.dis_weights_path, weights_only=True)
             else:
-                data = torch.load(self.dis_weights_path, map_location=lambda storage, loc: storage)
+                data = torch.load(self.dis_weights_path, map_location=lambda storage, loc: storage, weights_only=True)
 
             self.discriminator.load_state_dict(data['discriminator'])
 
@@ -164,10 +164,19 @@ class InpaintingModel(BaseModel):
             outputs = self.generator(inputs)                                    # in: [rgb(3)]
         return outputs
 
-    def backward(self, gen_loss=None, dis_loss=None):
-        dis_loss.backward()
-        self.dis_optimizer.step()
+    def backward(self, gen_loss=None, dis_loss=None, scaler=None):
+        if scaler:
+            scaler.scale(dis_loss).backward()
+            scaler.step(self.dis_optimizer)
 
-        gen_loss.backward()
-        self.gen_optimizer.step()
+            scaler.scale(gen_loss).backward()
+            scaler.step(self.gen_optimizer)
+            scaler.update()
+
+        else:
+            dis_loss.backward()
+            self.dis_optimizer.step()
+
+            gen_loss.backward()
+            self.gen_optimizer.step()
 

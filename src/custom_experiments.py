@@ -82,6 +82,9 @@ class ExpStitchO():
         if total == 0:
             print('No training data was provided! Check \'TRAIN_FLIST\' value in the configuration file.')
             return
+        
+        # Initialize the GradScaler for mixed precision
+        scaler = torch.cuda.amp.GradScaler('cuda')
 
         while keep_training:
             if 1 in self.config.STAGE:
@@ -102,12 +105,14 @@ class ExpStitchO():
                     # inpaint model
                     # train
                     # outputs, gen_loss, dis_loss, logs = self.inpaint_model.process(images, masks)
-                    outputs, gen_loss, dis_loss, logs = self.inpaint_model.process(images)
+
+                    with torch.cuda.amp.autocast():
+                        outputs, gen_loss, dis_loss, logs = self.inpaint_model.process(images)
 
                     torch.autograd.set_detect_anomaly(True)
 
                     # backward
-                    self.inpaint_model.backward(gen_loss, dis_loss)
+                    self.inpaint_model.backward(gen_loss, dis_loss, scaler)
 
                     logs["epoch"] = self.epoch
                     logs["iter"] = self.inpaint_model.iteration
