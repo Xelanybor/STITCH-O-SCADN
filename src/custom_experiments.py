@@ -7,9 +7,9 @@ from .utils import Progbar
 from .metrics import PSNR
 from .evaluate import evaluate
 from .dataset import load_data, BlockMask
-from .custom_dataset import StitchoDataset
+from.custom_dataset import StitchoDataset
 
-class ExpMvtec():
+class ExpStitchO():
     def __init__(self, config):
         self.config = config
 
@@ -25,7 +25,22 @@ class ExpMvtec():
 
         self.psnr = PSNR(255.0).to(config.DEVICE)
         self.mask_set = BlockMask(config)
-        self.dataset = load_data(config)
+
+        # self.dataset = load_data(config)
+
+        train_metadata = os.path.join(config.dataroot, 'metadata/train_metadata.json')
+        test_metadata = os.path.join(config.dataroot, 'metadata/test_metadata.json')
+
+        # print(config)
+
+        # exit()
+
+        self.dataset = {
+            'train': DataLoader(StitchoDataset(meta_file=train_metadata, transform_fn=None, resize_dim=(512, 512)), batch_size=config.BATCH_SIZE, shuffle=True, num_workers=config.workers, pin_memory=True),
+            'train4val': DataLoader(StitchoDataset(meta_file=train_metadata, transform_fn=None, resize_dim=(512, 512)), batch_size=config.BATCH_SIZE, shuffle=True, num_workers=config.workers, pin_memory=True),
+            'test': DataLoader(StitchoDataset(meta_file=test_metadata, transform_fn=None, resize_dim=(512, 512)), batch_size=config.BATCH_SIZE, shuffle=False, num_workers=config.workers, pin_memory=True),
+        }
+
         mask_loader = DataLoader(dataset=self.mask_set, batch_size=1)
         self.masks = [x.to(self.config.DEVICE) for x in mask_loader]
 
@@ -52,6 +67,12 @@ class ExpMvtec():
         # print(train_loader.dataset)
         # exit()
 
+        # print(self.config.dataroot)
+
+        # train_loader = StitchoDataset(
+        #     meta_file=self.config.META_FILE,
+        # )
+
         keep_training = True
         min_error = 1
         max_epoch = int(float(self.config.MAX_EPOCHS))
@@ -69,16 +90,21 @@ class ExpMvtec():
                 print('\n\nTraining proposal epoch: %d' % self.epoch)
                 progbar = Progbar(total, width=20, stateful_metrics=['epoch', 'iter'])
                 # print(len(train_loader))
-                # train_loader.get
-                exit()
+                # exit()
                 for items in train_loader:
                     self.inpaint_model.train()
+                    # print(items[0].shape)
+                    # exit()
                     images, masks, label = items
-                    images, masks = self.cuda(images, masks)
+                    # images, masks = self.cuda(images, masks)
+                    # images = self.cuda(images)
 
                     # inpaint model
                     # train
-                    outputs, gen_loss, dis_loss, logs = self.inpaint_model.process(images, masks)
+                    # outputs, gen_loss, dis_loss, logs = self.inpaint_model.process(images, masks)
+                    outputs, gen_loss, dis_loss, logs = self.inpaint_model.process(images)
+
+                    torch.autograd.set_detect_anomaly(True)
 
                     # backward
                     self.inpaint_model.backward(gen_loss, dis_loss)

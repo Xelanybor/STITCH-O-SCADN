@@ -89,7 +89,8 @@ def load_config(mode=None):
 
     # any mode
     if args.dataset is not None:
-        config.append('DATASET', args.dataset)
+        # config.append('DATASET', args.dataset)
+        config.DATASET = args.dataset
     if args.subset is not None:
         config.SUB_SET = args.subset
     if args.gpu is not None:
@@ -110,13 +111,16 @@ def load_config(mode=None):
     if mode == 1:
         config.MODE = 1
         if args.input is not None:
-            config.append('TRAIN_FLIST', args.input)
+            # config.append('TRAIN_FLIST', args.input)
+            config.TRAIN_FLIST = args.input
 
         if args.mask is not None:
-            config.append('TRAIN_MASK_FLIST', args.mask)
+            # config.append('TRAIN_MASK_FLIST', args.mask)
+            config.TRAIN_MASK_FLIST = args.mask
 
         if args.val is not None:
-            config.append('VAL_FLIST', args.val)
+            # config.append('VAL_FLIST', args.val)
+            config.VAL_FLIST = args.val
 
 
     # test mode
