@@ -18,10 +18,11 @@ LR = 0.0001                    # learning rate
 D2G_LR = 0.1                   # discriminator/generator learning rate ratio
 BETA1 = 0.0                    # adam optimizer beta1
 BETA2 = 0.9                    # adam optimizer beta2
-BATCH_SIZE = 1                 # input batch size for training
+BATCH_SIZE = 4                 # input batch size for training
 INPUT_SIZE = 512               # input image size for training 0 for original size
 INPUT_CHANNELS = 8
-SCALES = [1, 2, 3]
+SCALES = [1, 2, 3]              # list of what mask scales to use
+                                # 0: half-width strips, 1: quarter-width strips, 2: eighth-width strips, 3: sixteenth-width strips
 MAX_EPOCHS = 200                # maximum number of iterations to train the model
 
 REC_LOSS_WEIGHT = 1             # l1 loss weight
@@ -35,5 +36,5 @@ LOG_INTERVAL = 10            # how many iterations to wait before logging traini
 STAGE = [1]
 DATASET = 'STITCH-O'
 SUB_SET = ''
-PATH = './ckpt/mvtec'
+PATH = './ckpt/stitcho'
 DEBUG = 0
