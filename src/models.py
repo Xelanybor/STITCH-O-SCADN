@@ -65,7 +65,7 @@ class InpaintingModel(BaseModel):
         # discriminator input: [rgb(3)]
         generator = InpaintGenerator(in_channels=config.INPUT_CHANNELS)
 
-        discriminator = Discriminator(in_channels=config.INPUT_CHANNELS, use_sigmoid=config.GAN_LOSS != 'hinge')
+        discriminator = Discriminator(in_channels=config.INPUT_CHANNELS, use_sigmoid=config.GAN_LOSS not in ['hinge', 'nsgan'])
 
 
         if len(config.GPU) > 1:
@@ -116,13 +116,13 @@ class InpaintingModel(BaseModel):
         dis_fake, _ = self.discriminator(dis_input_fake)                    # in: [rgb(3)]
         dis_real_loss = self.adversarial_loss(dis_real, True, True)
         dis_fake_loss = self.adversarial_loss(dis_fake, False, True)
-        dis_loss += (dis_real_loss + dis_fake_loss) / 2
+        dis_loss = dis_loss + (dis_real_loss + dis_fake_loss) / 2
 
         # generator adversarial loss
         gen_input_fake = outputs
         gen_fake, gen_fake_feat = self.discriminator(gen_input_fake)                    # in: [rgb(3)]
         gen_gan_loss = self.adversarial_loss(gen_fake, True, False) * self.config.INPAINT_ADV_LOSS_WEIGHT
-        gen_loss += gen_gan_loss
+        gen_loss = gen_loss + gen_gan_loss
 
         # generator l1 loss
         if masks is not None:
@@ -131,14 +131,14 @@ class InpaintingModel(BaseModel):
             gen_l1_loss = (gen_l1_loss_back + 4 * gen_l1_loss_crop) * self.config.REC_LOSS_WEIGHT / torch.mean(masks)
         else:
             gen_l1_loss = self.l1_loss(outputs, images) * self.config.REC_LOSS_WEIGHT
-        gen_loss += gen_l1_loss
+        gen_loss = gen_loss + gen_l1_loss
 
         # generator feature matching loss
         gen_fm_loss = 0
         for i in range(len(dis_real_feat)):
-            gen_fm_loss += nn.MSELoss()(gen_fake_feat[i], dis_real_feat[i].detach())
+            gen_fm_loss = gen_fm_loss + nn.MSELoss()(gen_fake_feat[i], dis_real_feat[i].detach())
         gen_fm_loss = gen_fm_loss * self.config.FM_LOSS_WEIGHT
-        gen_loss += gen_fm_loss
+        gen_loss = gen_loss + gen_fm_loss
 
         logs = {
             "l_dis": dis_loss.item(),

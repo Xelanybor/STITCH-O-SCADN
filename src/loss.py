@@ -19,7 +19,7 @@ class AdversarialLoss(nn.Module):
         self.register_buffer('fake_label', torch.tensor(target_fake_label))
 
         if type == 'nsgan':
-            self.criterion = nn.BCELoss()
+            self.criterion = nn.BCEWithLogitsLoss()
 
         elif type == 'lsgan':
             self.criterion = nn.MSELoss()
