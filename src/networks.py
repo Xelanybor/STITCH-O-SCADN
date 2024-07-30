@@ -104,22 +104,22 @@ class Discriminator(BaseNetwork):
 
         self.conv1 = self.features = nn.Sequential(
             spectral_norm(nn.Conv2d(in_channels=in_channels, out_channels=64, kernel_size=4, stride=2, padding=1, bias=not use_spectral_norm), use_spectral_norm),
-            nn.LeakyReLU(0.2, inplace=True),
+            nn.LeakyReLU(0.2, inplace=False),
         )
 
         self.conv2 = nn.Sequential(
             spectral_norm(nn.Conv2d(in_channels=64, out_channels=128, kernel_size=4, stride=2, padding=1, bias=not use_spectral_norm), use_spectral_norm),
-            nn.LeakyReLU(0.2, inplace=True),
+            nn.LeakyReLU(0.2, inplace=False),
         )
 
         self.conv3 = nn.Sequential(
             spectral_norm(nn.Conv2d(in_channels=128, out_channels=256, kernel_size=4, stride=2, padding=1, bias=not use_spectral_norm), use_spectral_norm),
-            nn.LeakyReLU(0.2, inplace=True),
+            nn.LeakyReLU(0.2, inplace=False),
         )
 
         self.conv4 = nn.Sequential(
             spectral_norm(nn.Conv2d(in_channels=256, out_channels=512, kernel_size=4, stride=1, padding=1, bias=not use_spectral_norm), use_spectral_norm),
-            nn.LeakyReLU(0.2, inplace=True),
+            nn.LeakyReLU(0.2, inplace=False),
         )
 
         self.conv5 = nn.Sequential(
@@ -151,7 +151,7 @@ class ResnetBlock(nn.Module):
             spectral_norm(nn.Conv2d(in_channels=dim, out_channels=dim, kernel_size=3, padding=0, dilation=dilation, bias=not use_spectral_norm), use_spectral_norm),
             # spectral_norm(nn.Conv2d(in_channels=dim, out_channels=dim, kernel_size=3, padding=1, bias=not use_spectral_norm), use_spectral_norm),
             nn.InstanceNorm2d(dim, track_running_stats=False),
-            nn.ReLU(True),
+            nn.ReLU(inplace=False),
 
             nn.ReflectionPad2d(1),
             spectral_norm(nn.Conv2d(in_channels=dim, out_channels=dim, kernel_size=3, padding=0, dilation=1, bias=not use_spectral_norm), use_spectral_norm),
