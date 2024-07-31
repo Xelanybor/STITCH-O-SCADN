@@ -65,7 +65,7 @@ class InpaintingModel(BaseModel):
         # discriminator input: [rgb(3)]
         generator = InpaintGenerator(in_channels=config.INPUT_CHANNELS)
 
-        discriminator = Discriminator(in_channels=config.INPUT_CHANNELS, use_sigmoid=config.GAN_LOSS not in ['hinge', 'nsgan'])
+        discriminator = Discriminator(in_channels=config.INPUT_CHANNELS, use_sigmoid=config.GAN_LOSS not in ['hinge', 'nsgan'], use_spectral_norm=False)
 
 
         if len(config.GPU) > 1:

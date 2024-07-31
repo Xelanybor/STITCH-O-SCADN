@@ -43,19 +43,19 @@ class InpaintGenerator(BaseNetwork):
             nn.ReflectionPad2d(3),
             nn.Conv2d(in_channels=in_channels, out_channels=64, kernel_size=7, padding=0),
             nn.InstanceNorm2d(64, track_running_stats=False),
-            nn.ReLU(True),
+            nn.ReLU(inplace=False),
 
             nn.Conv2d(in_channels=64, out_channels=128, kernel_size=4, stride=2, padding=1),
             nn.InstanceNorm2d(128, track_running_stats=False),
-            nn.ReLU(True),
+            nn.ReLU(inplace=False),
 
             nn.Conv2d(in_channels=128, out_channels=256, kernel_size=4, stride=2, padding=1),
             nn.InstanceNorm2d(256, track_running_stats=False),
-            nn.ReLU(True),
+            nn.ReLU(inplace=False),
 
             nn.Conv2d(in_channels=256, out_channels=512, kernel_size=4, stride=2, padding=1),
-            nn.InstanceNorm2d(256, track_running_stats=False),
-            nn.ReLU(True)
+            nn.InstanceNorm2d(512, track_running_stats=False),
+            nn.ReLU(inplace=False)
         )
 
         blocks = []
@@ -68,18 +68,18 @@ class InpaintGenerator(BaseNetwork):
         self.decoder = nn.Sequential(
             nn.Upsample(scale_factor=2, mode='nearest'),
             nn.Conv2d(in_channels=512, out_channels=256, kernel_size=3, stride=1, padding=1),
-            nn.InstanceNorm2d(128, track_running_stats=False),
-            nn.ReLU(True),
+            nn.InstanceNorm2d(256, track_running_stats=False),
+            nn.ReLU(inplace=False),
 
             nn.Upsample(scale_factor=2, mode='nearest'),
             nn.Conv2d(in_channels=256, out_channels=128, kernel_size=3, stride=1, padding=1),
             nn.InstanceNorm2d(128, track_running_stats=False),
-            nn.ReLU(True),
+            nn.ReLU(inplace=False),
 
             nn.Upsample(scale_factor=2, mode='nearest'),
             nn.Conv2d(in_channels=128, out_channels=64, kernel_size=3, stride=1, padding=1),
             nn.InstanceNorm2d(64, track_running_stats=False),
-            nn.ReLU(True),
+            nn.ReLU(inplace=False),
 
             nn.ReflectionPad2d(3),
             nn.Conv2d(in_channels=64, out_channels=in_channels, kernel_size=7, padding=0),
