@@ -6,8 +6,8 @@ from .models import InpaintingModel
 from .utils import Progbar
 from .metrics import PSNR
 from .evaluate import evaluate
-from .dataset import load_data, BlockMask
-from.custom_dataset import StitchoDataset
+from .dataset import BlockMask
+from.custom_dataset import load_data
 
 class ExpStitchO():
     def __init__(self, config):
@@ -26,20 +26,13 @@ class ExpStitchO():
         self.psnr = PSNR(255.0).to(config.DEVICE)
         self.mask_set = BlockMask(config)
 
-        # self.dataset = load_data(config)
+        self.dataset = load_data(config)
 
-        train_metadata = os.path.join(config.dataroot, 'metadata/train_metadata.json')
-        test_metadata = os.path.join(config.dataroot, 'metadata/test_metadata.json')
-
-        # print(config)
-
-        # exit()
-
-        self.dataset = {
-            'train': DataLoader(StitchoDataset(meta_file=train_metadata, transform_fn=None, resize_dim=(512, 512)), batch_size=config.BATCH_SIZE, shuffle=True, num_workers=config.workers, pin_memory=True),
-            'train4val': DataLoader(StitchoDataset(meta_file=train_metadata, transform_fn=None, resize_dim=(512, 512)), batch_size=config.BATCH_SIZE, shuffle=True, num_workers=config.workers, pin_memory=True),
-            'test': DataLoader(StitchoDataset(meta_file=test_metadata, transform_fn=None, resize_dim=(512, 512)), batch_size=config.BATCH_SIZE, shuffle=False, num_workers=config.workers, pin_memory=True),
-        }
+        # self.dataset = {
+        #     'train': DataLoader(StitchoDataset(meta_file=train_metadata, transform_fn=None, resize_dim=(512, 512)), batch_size=config.BATCH_SIZE, shuffle=True, num_workers=config.workers, pin_memory=True),
+        #     'train4val': DataLoader(StitchoDataset(meta_file=train_metadata, transform_fn=None, resize_dim=(512, 512)), batch_size=config.BATCH_SIZE, shuffle=True, num_workers=config.workers, pin_memory=True),
+        #     'test': DataLoader(StitchoDataset(meta_file=test_metadata, transform_fn=None, resize_dim=(512, 512)), batch_size=config.BATCH_SIZE, shuffle=False, num_workers=config.workers, pin_memory=True),
+        # }
 
         mask_loader = DataLoader(dataset=self.mask_set, batch_size=1)
         self.masks = [x.to(self.config.DEVICE) for x in mask_loader]
@@ -84,7 +77,10 @@ class ExpStitchO():
             return
         
         # Initialize the GradScaler for mixed precision
-        scaler = torch.cuda.amp.GradScaler('cuda')
+        scaler = torch.amp.GradScaler('cuda')
+
+        # print(self.config.STAGE)
+        # exit()
 
         while keep_training:
             if 1 in self.config.STAGE:
@@ -96,23 +92,20 @@ class ExpStitchO():
                 # exit()
                 for items in train_loader:
                     self.inpaint_model.train()
-                    # print(items[0].shape)
+                    # print([x.shape for x in items])
                     # exit()
                     images, masks, label = items
-                    # images, masks = self.cuda(images, masks)
+                    images, masks = self.cuda(images, masks)
                     # images = self.cuda(images)
 
                     # inpaint model
                     # train
-                    # outputs, gen_loss, dis_loss, logs = self.inpaint_model.process(images, masks)
-
-                    with torch.cuda.amp.autocast():
-                        outputs, gen_loss, dis_loss, logs = self.inpaint_model.process(images)
-
-                    torch.autograd.set_detect_anomaly(True)
+                    with torch.amp.autocast('cuda'):
+                        outputs, gen_loss, dis_loss, logs = self.inpaint_model.process(images, masks)
 
                     # backward
-                    self.inpaint_model.backward(gen_loss, dis_loss, scaler)
+                    # self.inpaint_model.backward(gen_loss, dis_loss, scaler)
+                    self.inpaint_model.backward(gen_loss, dis_loss)
 
                     logs["epoch"] = self.epoch
                     logs["iter"] = self.inpaint_model.iteration

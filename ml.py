@@ -147,5 +147,5 @@ def load_config(mode=None):
 
 
 if __name__ == "__main__":
-    # main()
-    main(1)
+    main()
+    # main(1)
