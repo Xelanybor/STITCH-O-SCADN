@@ -188,7 +188,7 @@ def load_data(opt):
         dataset = {x: ImageFolder(os.path.join(opt.dataroot, splits2folder[x]), transform) for x in splits}
 
 
-        dataset = {x: get_custom_anomaly_dataset(dataset[x], opt.normal_class) for x in dataset.keys()}
+        dataset = {x: get_custom_anomaly_dataset(dataset[x], opt.normal_class) for x in dataset.keys()} 
         # dataset['train4val'] = dataset['train']
         dataloader = {}
         for x in splits:
@@ -198,17 +198,13 @@ def load_data(opt):
                                                             shuffle=shuffle[x],
                                                             num_workers=int(opt.workers),
                                                             drop_last=drop_last_batch[x],
-                                                            collate_fn=collate[x],
-                                                            worker_init_fn=(None if opt.SEED == -1
-                                                            else lambda x: np.random.seed(opt.SEED)))
+                                                            collate_fn=collate[x])
             else:
                 dataloader[x] = torch.utils.data.DataLoader(dataset=dataset[x],
                                                             batch_size=opt.BATCH_SIZE,
                                                             shuffle=shuffle[x],
                                                             num_workers=int(opt.workers),
-                                                            drop_last=drop_last_batch[x],
-                                                            worker_init_fn=(None if opt.SEED == -1
-                                                                            else lambda x: np.random.seed(opt.SEED)))
+                                                            drop_last=drop_last_batch[x])
         return dataloader
 
 ##
