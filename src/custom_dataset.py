@@ -71,8 +71,10 @@ class StitchoDataset(Dataset):
         # print(image.shape)
         # exit()
 
-        image = from_numpy(image).float().permute(2, 0, 1)
-        # image = from_numpy(image).float()[None, :, :]
+        if len(image.shape) == 3:
+            image = from_numpy(image).float().permute(2, 0, 1)
+        else:
+            image = from_numpy(image).float()[None, :, :]
 
         # print(image.shape)
         # exit()
