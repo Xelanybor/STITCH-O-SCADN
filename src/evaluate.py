@@ -16,12 +16,12 @@ from scipy.optimize import brentq
 from scipy.interpolate import interp1d
 import matplotlib.pyplot as plt
 from matplotlib import rc
-rc('font', **{'family': 'serif', 'serif': ['Computer Modern']})
-rc('text', usetex=True)
+# rc('font', **{'family': 'serif', 'serif': ['Computer Modern']})
+# rc('text', usetex=False)
 
 def evaluate(labels, scores, metric='roc'):
     if metric == 'roc':
-        return roc(labels, scores)
+        return roc(labels, scores, 'save_file_test')
     elif metric == 'auprc':
         return auprc(labels, scores)
     elif metric == 'f1_score':
@@ -51,6 +51,7 @@ def roc(labels, scores, saveto=None):
     eer = brentq(lambda x: 1. - x - interp1d(fpr, tpr)(x), 0., 1.)
 
     if saveto:
+        os.makedirs(saveto, exist_ok=True)
         plt.figure()
         lw = 2
         plt.plot(fpr, tpr, color='darkorange', lw=lw, label='(AUC = %0.2f, EER = %0.2f)' % (roc_auc, eer))
