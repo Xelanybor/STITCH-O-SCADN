@@ -55,16 +55,6 @@ class ExpStitchO():
 
     def train(self):
         train_loader = self.dataset['train']
-        # print(self.dataset)
-        # print(type(train_loader.dataset))
-        # print(train_loader.dataset)
-        # exit()
-
-        # print(self.config.dataroot)
-
-        # train_loader = StitchoDataset(
-        #     meta_file=self.config.META_FILE,
-        # )
 
         keep_training = True
         min_error = 1
@@ -92,9 +82,8 @@ class ExpStitchO():
                 # exit()
                 for items in train_loader:
                     self.inpaint_model.train()
-                    # print([x.shape for x in items])
-                    # exit()
-                    images, masks, label = items
+
+                    images, masks, label, _ = items
                     images, masks = self.cuda(images, masks)
                     # images = self.cuda(images)
 
@@ -117,7 +106,7 @@ class ExpStitchO():
             if self.config.LOG_INTERVAL and self.epoch % self.config.LOG_INTERVAL == 0:
                 error1 = self.eval()
                 auc1 = self.test()
-                self.log([auc1, error1])
+                self.log([auc1, error1], self.epoch)
                 if error1 <= min_error:
                     min_error = error1
                     self.save()
@@ -163,7 +152,7 @@ class ExpStitchO():
         for index, items in enumerate(test_loader):
             start_index = index * test_loader.batch_size
             end_index = start_index + items[0].shape[0]
-            images, masks, label = items
+            images, masks, label, clsname = items
             images, masks = self.cuda(images, masks)
 
             # inpaint model
@@ -301,9 +290,10 @@ class ExpStitchO():
             self.scale_norm[i] = mean_error_scales[str(scale)].item()
         print('updated norm:', self.scale_norm)
 
-    def log(self, logs):
+    def log(self, logs: list, epoch: int = None):
         with open(self.log_file, 'a') as f:
-            f.write('%s\n' % ' '.join([str(item) for item in logs]))
+            # f.write('%s\n' % ' '.join([str(item) for item in logs]))
+            f.write(f"{'Epoch ' + str(epoch) + ': ' if not epoch is None else ''}AUROC: {logs[0]}, Error: {logs[1]}\n")
 
     def cuda(self, *args):
         return (item.to(self.config.DEVICE) for item in args)

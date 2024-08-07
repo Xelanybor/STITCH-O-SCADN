@@ -19,13 +19,15 @@ class StitchoDataset(Dataset):
         transform_fn,
         resize_dim=None, 
         noise_factor=0, 
-        p=0
+        p=0,
+        dataroot=None
     ):
         self.meta_file = meta_file
         self.transform_fn = transform_fn
         self.resize_dim = resize_dim
         self.noise_factor = noise_factor
         self.p = p
+        self.dataroot = dataroot
 
         # construct metas
         with open(meta_file, "r") as f_r:
@@ -41,8 +43,10 @@ class StitchoDataset(Dataset):
         input = {}
         meta = self.metas[index]
 
+        filename = meta["filename"].replace("\\", "/")
+
         # read image
-        filename = os.path.join("dataset/stitcho", meta["filename"])
+        filename = os.path.join(self.dataroot, filename)
         label = meta["label"]
         if os.path.exists(filename):
             image = np.load(filename)
@@ -96,7 +100,7 @@ class StitchoDataset(Dataset):
         # noisy_image = add_noise(image, self.noise_factor, self.p)
         # input.update({"noisy_image": noisy_image})
         
-        return input['image'], input['label']
+        return input['image'], input['label'], input['clsname']
     
 def load_data(opt):
 
@@ -115,7 +119,7 @@ def load_data(opt):
     drop_last_batch = {'train': True, 'test': False, 'train4val': False}
     shuffle = {'train': True, 'test': False, 'train4val': False}
 
-    dataset = {x: StitchoDataset(meta_file=splits2metadata[x], transform_fn=None, resize_dim=(512, 512)) for x in splits}
+    dataset = {x: StitchoDataset(meta_file=splits2metadata[x], transform_fn=None, resize_dim=(512, 512), dataroot=opt.dataroot) for x in splits}
     # dataset = {x: get_custom_anomaly_dataset(dataset[x], opt.normal_class) for x in dataset.keys()}
 
     dataloader = {}
@@ -156,17 +160,19 @@ class AddMask():
         masks = []
         imgs = []
         label = []
+        clsnames = []
         for i in range(len(batch)):
-            img, target = batch[i]
+            img, target, clsname = batch[i]
             imgs.append(img)
             masks.append(random.choice(self.mask_set))
             label.append(target)
+            clsnames.append(clsname)
         imgs = torch.stack(imgs, dim=0)
         mask_batch = torch.stack(masks, dim=0)
         label = torch.FloatTensor(label)
         if self.mask_type == 0:
             mask_batch = None
-        return imgs, mask_batch, label
+        return imgs, mask_batch, label, clsnames
     
 def get_custom_anomaly_dataset(subset, nrm_cls):
     nrm_cls_idx = subset.class_to_idx[nrm_cls]
