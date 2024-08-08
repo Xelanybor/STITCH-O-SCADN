@@ -26,7 +26,7 @@ class ExpStitchO():
         self.psnr = PSNR(255.0).to(config.DEVICE)
         self.mask_set = BlockMask(config)
 
-        self.dataset = load_data(config)
+        self.dataset_info, self.dataset = load_data(config)
 
         # self.dataset = {
         #     'train': DataLoader(StitchoDataset(meta_file=train_metadata, transform_fn=None, resize_dim=(512, 512)), batch_size=config.BATCH_SIZE, shuffle=True, num_workers=config.workers, pin_memory=True),
@@ -105,8 +105,10 @@ class ExpStitchO():
             # log model at checkpoints
             if self.config.LOG_INTERVAL and self.epoch % self.config.LOG_INTERVAL == 0:
                 error1 = self.eval()
-                auc1 = self.test()
-                self.log([auc1, error1], self.epoch)
+                aucs = self.test()
+
+                self.log([aucs, error1], self.epoch)
+
                 if error1 <= min_error:
                     min_error = error1
                     self.save()
@@ -142,12 +144,16 @@ class ExpStitchO():
         self.inpaint_model.eval()
 
         test_loader = self.dataset['test']
+        class_count = self.dataset_info['test'].get_class_count()
+        class_index = {clsname: i for i, clsname in enumerate(class_count.keys())}
 
         total = len(test_loader.dataset)
 
         an_scores1 = torch.zeros(size=(total,), dtype=torch.float32, device=self.config.DEVICE)
         gt_labels = torch.zeros(size=(total,), dtype=torch.long, device=self.config.DEVICE)
         select_scale = torch.zeros(size=(total,), dtype=torch.long, device=self.config.DEVICE)
+        classes = torch.zeros(size=(total,), dtype=torch.int, device=self.config.DEVICE)
+
         progbar = Progbar(total, width=20, stateful_metrics=['it'])
         for index, items in enumerate(test_loader):
             start_index = index * test_loader.batch_size
@@ -155,19 +161,33 @@ class ExpStitchO():
             images, masks, label, clsname = items
             images, masks = self.cuda(images, masks)
 
+            # print(clsname)
+            # exit()
+
             # inpaint model
             error1_list, mix_out_list_x, mix_out_list_y = self.get_error_map_for_some_scales(images, self.masks, metric='MSE',
                                                                            scales=self.config.SCALES, output=True)
             error1, max_scale_ind = self.get_max_select_error(error1_list, need_arg=True)
+            
             select_scale[start_index: end_index] = max_scale_ind
             an_scores1[start_index: end_index] = torch.mean(error1, [1, 2])
             gt_labels[start_index: end_index] = label
+            classes[start_index: end_index] = torch.as_tensor(list(map(lambda x: class_index[x], clsname)))
             progbar.add(len(images), values=[('index', index)])
-        an_scores1 = (an_scores1 - torch.min(an_scores1)) / (torch.max(an_scores1) - torch.min(an_scores1))
-        # metrics
-        auc1 = evaluate(gt_labels, an_scores1)
-        print(auc1)
-        return auc1
+
+        aucs = {}
+
+        an_scores1 = {clsname: an_scores1[classes == class_index[clsname]] for clsname in class_count.keys()}
+        gt_labels = {clsname: gt_labels[classes == class_index[clsname]] for clsname in class_count.keys()}
+        select_scale = {clsname: select_scale[classes == class_index[clsname]] for clsname in class_count.keys()}
+
+        for class_name in class_count.keys():
+            an_scores1[class_name] = (an_scores1[class_name] - torch.min(an_scores1[class_name])) / (torch.max(an_scores1[class_name]) - torch.min(an_scores1[class_name]))
+            # metrics
+            auc1 = evaluate(gt_labels[class_name], an_scores1[class_name])
+            print(f'{class_name}: {auc1}')
+            aucs[class_name] = auc1
+        return aucs
 
     def get_error_map_coarse(self, images, mask_loader, metric='MSE'):
         if metric == 'MSE':
@@ -290,10 +310,12 @@ class ExpStitchO():
             self.scale_norm[i] = mean_error_scales[str(scale)].item()
         print('updated norm:', self.scale_norm)
 
-    def log(self, logs: list, epoch: int = None):
+    def log(self, epoch: int, aurocs: float, error: float):
         with open(self.log_file, 'a') as f:
-            # f.write('%s\n' % ' '.join([str(item) for item in logs]))
-            f.write(f"{'Epoch ' + str(epoch) + ': ' if not epoch is None else ''}AUROC: {logs[0]}, Error: {logs[1]}\n")
+            f.write(f'Epoch {epoch}:\n')
+            for classname, auc in aurocs.items():
+                f.write(f'{classname}: AUROC = {auc}\n')
+                f.write(f'{error}: Error {error}\n')
 
     def cuda(self, *args):
         return (item.to(self.config.DEVICE) for item in args)

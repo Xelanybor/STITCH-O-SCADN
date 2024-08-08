@@ -28,6 +28,7 @@ class StitchoDataset(Dataset):
         self.noise_factor = noise_factor
         self.p = p
         self.dataroot = dataroot
+        self.class_count = {}
 
         # construct metas
         with open(meta_file, "r") as f_r:
@@ -35,6 +36,12 @@ class StitchoDataset(Dataset):
             for line in f_r:
                 meta = json.loads(line)
                 self.metas.append(meta)
+
+                # keep track of class count
+                if meta["clsname"] not in self.class_count:
+                    self.class_count[meta["clsname"]] = 0
+                self.class_count[meta["clsname"]] += 1
+
 
     def __len__(self):
         return len(self.metas)
@@ -102,6 +109,9 @@ class StitchoDataset(Dataset):
         
         return input['image'], input['label'], input['clsname']
     
+    def get_class_count(self):
+        return {clsname: count for clsname, count in self.class_count.items()}
+    
 def load_data(opt):
 
     
@@ -118,6 +128,11 @@ def load_data(opt):
     splits2metadata = {'train': train_metadata, 'test': test_metadata, 'train4val': train_metadata}
     drop_last_batch = {'train': True, 'test': False, 'train4val': False}
     shuffle = {'train': True, 'test': False, 'train4val': False}
+
+    transform = transforms.Compose([transforms.Resize(opt.INPUT_SIZE),
+                                        transforms.CenterCrop(opt.INPUT_SIZE),
+                                        transforms.ToTensor(),
+                                        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)), ])
 
     dataset = {x: StitchoDataset(meta_file=splits2metadata[x], transform_fn=None, resize_dim=(512, 512), dataroot=opt.dataroot) for x in splits}
     # dataset = {x: get_custom_anomaly_dataset(dataset[x], opt.normal_class) for x in dataset.keys()}
@@ -138,7 +153,7 @@ def load_data(opt):
                                                         shuffle=shuffle[x],
                                                         num_workers=int(opt.workers),
                                                         drop_last=drop_last_batch[x])
-    return dataloader
+    return dataset, dataloader
 
     
 
