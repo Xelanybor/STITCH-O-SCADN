@@ -134,7 +134,7 @@ def load_data(opt):
                                         transforms.ToTensor(),
                                         transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)), ])
 
-    dataset = {x: StitchoDataset(meta_file=splits2metadata[x], transform_fn=None, resize_dim=(512, 512), dataroot=opt.dataroot) for x in splits}
+    dataset = {x: StitchoDataset(meta_file=splits2metadata[x], transform_fn=transform, resize_dim=(512, 512), dataroot=opt.dataroot) for x in splits}
     # dataset = {x: get_custom_anomaly_dataset(dataset[x], opt.normal_class) for x in dataset.keys()}
 
     dataloader = {}
