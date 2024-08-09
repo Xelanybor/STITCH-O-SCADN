@@ -107,11 +107,14 @@ class ExpStitchO():
                 error1 = self.eval()
                 aucs = self.test()
 
-                self.log([aucs, error1], self.epoch)
+                self.log(self.epoch, aucs, error1)
 
                 if error1 <= min_error:
                     min_error = error1
                     self.save()
+
+            # update learning rate
+            self.inpaint_model.step_learning_rate()
 
             if self.epoch >= max_epoch:
                 break

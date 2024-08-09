@@ -94,6 +94,14 @@ class InpaintingModel(BaseModel):
             betas=(config.BETA1, config.BETA2)
         )
 
+        if config.USE_LR_DECAY:
+            self.gen_scheduler = optim.lr_scheduler.StepLR(self.gen_optimizer, step_size=config.LR_DECAY_EPOCH, gamma=config.LR_GAMMA)
+            self.dis_scheduler = optim.lr_scheduler.StepLR(self.dis_optimizer, step_size=config.LR_DECAY_EPOCH, gamma=config.LR_GAMMA)
+
+    def step_learning_rate(self):
+        if self.config.USE_LR_DECAY and self.gen_scheduler is not None and self.dis_scheduler is not None:
+            self.gen_scheduler.step()
+            self.dis_scheduler.step()
 
     def process(self, images, masks=None):
         self.iteration += 1
