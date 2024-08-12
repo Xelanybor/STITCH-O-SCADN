@@ -318,7 +318,7 @@ class ExpStitchO():
             f.write(f'Epoch {epoch}:\n')
             for classname, auc in aurocs.items():
                 f.write(f'{classname}: AUROC = {auc}\n')
-                f.write(f'{error}: Error {error}\n')
+                f.write(f'{" " * len(classname)}: Error {error}\n')
 
     def cuda(self, *args):
         return (item.to(self.config.DEVICE) for item in args)
