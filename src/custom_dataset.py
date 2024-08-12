@@ -11,6 +11,7 @@ from PIL import Image
 from torchvision import transforms
 import json
 from torch import from_numpy
+from sklearn.model_selection import train_test_split
 
 class StitchoDataset(Dataset):
     def __init__(
@@ -123,7 +124,6 @@ def load_data(opt):
 
     masks = AddMask(opt)
     collate = {'train': masks.append_mask, 'test': masks.append_mask, 'train4val': masks.append_mask} # collate functions for dataloader
-    # collate = {x: None for x in splits}
 
     splits2metadata = {'train': train_metadata, 'test': test_metadata, 'train4val': train_metadata}
     drop_last_batch = {'train': True, 'test': False, 'train4val': False}
@@ -131,13 +131,15 @@ def load_data(opt):
 
     transform = transforms.Compose([transforms.Resize(opt.INPUT_SIZE),
                                         transforms.CenterCrop(opt.INPUT_SIZE),
-                                        # transforms.ToTensor(),
                                         transforms.Normalize((0.5), (0.5)), ])
 
-    # transform = transforms.Normalize((0.5), (0.5))
 
     dataset = {x: StitchoDataset(meta_file=splits2metadata[x], transform_fn=None, resize_dim=(512, 512), dataroot=opt.dataroot) for x in splits}
-    # dataset = {x: get_custom_anomaly_dataset(dataset[x], opt.normal_class) for x in dataset.keys()}
+
+    # split train dataset into train and validation datasets
+    train_idx, val_idx = train_test_split(list(range(len(dataset['train']))), test_size=opt.VAL_SPLIT, random_state=opt.SEED)
+    dataset['train4val'] = torch.utils.data.Subset(dataset['train'], val_idx)
+    dataset['train'] = torch.utils.data.Subset(dataset['train'], train_idx)
 
     dataloader = {}
 

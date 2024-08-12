@@ -9,6 +9,7 @@ VERBOSE = 0          # turns on verbose mode in the output console
 dataroot = './dataset/stitcho'
 workers = 4
 normal_class = 'good'
+VAL_SPLIT = 0.2
 
 TRAIN_MASK_FLIST = './mask'
 TEST_MASK_FLIST = './mask'
@@ -18,12 +19,15 @@ LR = 0.0001                    # learning rate
 D2G_LR = 0.1                   # discriminator/generator learning rate ratio
 BETA1 = 0.0                    # adam optimizer beta1
 BETA2 = 0.9                    # adam optimizer beta2
+
+USE_LR_DECAY = False
+
 BATCH_SIZE = 8                 # input batch size for training
 INPUT_SIZE = 512               # input image size for training 0 for original size
 INPUT_CHANNELS = 1
 SCALES = [1, 2, 3]              # list of what mask scales to use
                                 # 0: half-width strips, 1: quarter-width strips, 2: eighth-width strips, 3: sixteenth-width strips
-MAX_EPOCHS = 40                # maximum number of iterations to train the model
+MAX_EPOCHS = 200                # maximum number of iterations to train the model
 
 REC_LOSS_WEIGHT = 1             # l1 loss weight
 FM_LOSS_WEIGHT = 0           # feature-matching loss weight
@@ -31,7 +35,7 @@ INPAINT_ADV_LOSS_WEIGHT = 0.001  # adversarial loss weight
 
 GAN_LOSS = 'nsgan'               # nsgan | lsgan | hinge
 
-LOG_INTERVAL = 5            # how many iterations to wait before logging training status (0: never)
+LOG_INTERVAL = 10            # how many iterations to wait before logging training status (0: never)
 
 STAGE = [1]
 DATASET = 'STITCH-O'
