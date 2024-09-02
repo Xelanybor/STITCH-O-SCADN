@@ -129,12 +129,19 @@ def load_data(opt):
     drop_last_batch = {'train': True, 'test': False, 'train4val': False}
     shuffle = {'train': True, 'test': False, 'train4val': False}
 
-    transform = transforms.Compose([transforms.Resize(opt.INPUT_SIZE),
+    if opt.MODIFIED:
+        print('modified')
+        transform = transforms.Compose([transforms.Resize(opt.INPUT_SIZE),
+                                        transforms.CenterCrop(opt.INPUT_SIZE),
+                                        transforms.RandomRotation(degrees=45),
+                                        transforms.Normalize((0.5), (0.5)), ])
+    else:
+        transform = transforms.Compose([transforms.Resize(opt.INPUT_SIZE),
                                         transforms.CenterCrop(opt.INPUT_SIZE),
                                         transforms.Normalize((0.5), (0.5)), ])
 
 
-    dataset = {x: StitchoDataset(meta_file=splits2metadata[x], transform_fn=None, resize_dim=(512, 512), dataroot=opt.dataroot) for x in splits}
+    dataset = {x: StitchoDataset(meta_file=splits2metadata[x], transform_fn=transform, resize_dim=(opt.INPUT_SIZE, opt.INPUT_SIZE), dataroot=opt.dataroot) for x in splits}
 
     # split train dataset into train and validation datasets
     train_idx, val_idx = train_test_split(list(range(len(dataset['train']))), test_size=opt.VAL_SPLIT, random_state=opt.SEED)
