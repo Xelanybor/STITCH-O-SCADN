@@ -2,6 +2,8 @@ import os
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
+import matplotlib.pyplot as plt
+
 from .models import InpaintingModel
 from .utils import Progbar
 from .metrics import PSNR
@@ -52,6 +54,41 @@ class ExpStitchO():
 
     def save(self):
         self.inpaint_model.save()
+
+    def inpaint(self, num_samples=1):
+        loader = self.dataset['test']
+        self.inpaint_model.eval()
+
+        for index, items in enumerate(loader):
+
+            images, masks, label, clsname = items
+            images, masks = self.cuda(images, masks)
+
+            # inpaint model
+            for i in range(num_samples):
+                output = self.inpaint_model(images, masks)
+                output = self.postprocess(output)
+                output = output.cpu()
+                images = self.postprocess(images)
+                images = images.cpu()
+                masks = self.postprocess(masks)
+                masks = masks.cpu()
+                self.save_image(images, index, i, 'input')
+                self.save_image(output, index, i, 'output')
+                self.save_image(masks, index, i, 'mask')
+
+    def save_image(self, output, index, i, path):
+        if not os.path.exists(self.results_path):
+            os.makedirs(self.results_path)
+
+        os.makedirs(os.path.join(self.results_path, path), exist_ok=True)
+        output_paths = [os.path.join(self.results_path, path, str(index) + '_channel' + str(c) + '.png') for c in range(self.config.INPUT_CHANNELS)]
+        # save tensor as n images
+        for i, output_path in enumerate(output_paths):
+            output_i = output[:, :, :, i]
+            plt.imshow(output_i[0], cmap='gray')
+            plt.axis('off')
+            plt.savefig(output_path)
 
     def train(self):
         train_loader = self.dataset['train']

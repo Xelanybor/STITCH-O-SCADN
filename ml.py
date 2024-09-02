@@ -57,9 +57,14 @@ def main(mode=None):
         model.test()
 
     # eval mode
-    else:
+    elif config.MODE == 3:
         print('\nstart eval...\n')
         model.eval()
+
+    # inpaint mode
+    elif config.MODE == 4:
+        print('\nstart inpainting...\n')
+        model.inpaint()
 
 
 def load_config(mode=None):
