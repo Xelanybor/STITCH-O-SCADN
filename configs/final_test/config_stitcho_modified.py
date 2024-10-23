@@ -5,10 +5,11 @@ GPU = [0]            # list of gpu ids
 DEBUG = 0            # turns on debugging mode
 VERBOSE = 0          # turns on verbose mode in the output console
 
-dataroot = '/scratch/smtale028/R/dataset/stitcho_all'
+dataroot = '/scratch/smtale028/R/dataset/stitcho_200'
 workers = 4
 normal_class = 'good'
 VAL_SPLIT = 0.25
+MODIFIED = True
 
 TRAIN_MASK_FLIST = '/home/smtale028/SCADN/mask'
 TEST_MASK_FLIST = '/home/smtale028/SCADN/mask'
@@ -39,5 +40,5 @@ LOG_INTERVAL = 10            # how many iterations to wait before logging traini
 STAGE = [1]
 DATASET = 'STITCH-O'
 SUB_SET = ''
-PATH = '/home/smtale028/SCADN/ckpt/stitcho/channels/all'
+PATH = '/home/smtale028/SCADN/ckpt/stitcho/final/modified'
 DEBUG = 0

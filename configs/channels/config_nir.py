@@ -5,7 +5,7 @@ GPU = [0]            # list of gpu ids
 DEBUG = 0            # turns on debugging mode
 VERBOSE = 0          # turns on verbose mode in the output console
 
-dataroot = '/scratch/smtale028/R/dataset/stitcho_all'
+dataroot = '/scratch/smtale028/R/dataset/stitcho_nir'
 workers = 4
 normal_class = 'good'
 VAL_SPLIT = 0.25
@@ -23,7 +23,7 @@ USE_LR_DECAY = False
 
 BATCH_SIZE = 8                 # input batch size for training
 INPUT_SIZE = 512               # input image size for training 0 for original size
-INPUT_CHANNELS = 5
+INPUT_CHANNELS = 1
 SCALES = [1, 2, 3]              # list of what mask scales to use
                                 # 0: half-width strips, 1: quarter-width strips, 2: eighth-width strips, 3: sixteenth-width strips
 MAX_EPOCHS = 200                # maximum number of iterations to train the model
@@ -39,5 +39,5 @@ LOG_INTERVAL = 10            # how many iterations to wait before logging traini
 STAGE = [1]
 DATASET = 'STITCH-O'
 SUB_SET = ''
-PATH = '/home/smtale028/SCADN/ckpt/stitcho/channels/all'
+PATH = '/home/smtale028/SCADN/ckpt/stitcho/channels/nir'
 DEBUG = 0

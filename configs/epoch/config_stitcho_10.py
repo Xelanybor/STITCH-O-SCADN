@@ -5,10 +5,11 @@ GPU = [0]            # list of gpu ids
 DEBUG = 0            # turns on debugging mode
 VERBOSE = 0          # turns on verbose mode in the output console
 
-dataroot = '/scratch/smtale028/R/dataset/stitcho_all'
+dataroot = '/scratch/smtale028/R/dataset/stitcho_200'
 workers = 4
 normal_class = 'good'
 VAL_SPLIT = 0.25
+MODIFIED = True
 
 TRAIN_MASK_FLIST = '/home/smtale028/SCADN/mask'
 TEST_MASK_FLIST = '/home/smtale028/SCADN/mask'
@@ -26,7 +27,7 @@ INPUT_SIZE = 512               # input image size for training 0 for original si
 INPUT_CHANNELS = 5
 SCALES = [1, 2, 3]              # list of what mask scales to use
                                 # 0: half-width strips, 1: quarter-width strips, 2: eighth-width strips, 3: sixteenth-width strips
-MAX_EPOCHS = 200                # maximum number of iterations to train the model
+MAX_EPOCHS = 10                # maximum number of iterations to train the model
 
 REC_LOSS_WEIGHT = 1             # l1 loss weight
 FM_LOSS_WEIGHT = 0           # feature-matching loss weight
@@ -39,5 +40,5 @@ LOG_INTERVAL = 10            # how many iterations to wait before logging traini
 STAGE = [1]
 DATASET = 'STITCH-O'
 SUB_SET = ''
-PATH = '/home/smtale028/SCADN/ckpt/stitcho/channels/all'
+PATH = '/home/smtale028/SCADN/ckpt/stitcho/epoch/10'
 DEBUG = 0
